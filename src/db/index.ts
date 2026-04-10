@@ -33,8 +33,25 @@ export async function initDB() {
       status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'done')),
       priority VARCHAR(10) DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high')),
       deadline DATE,
+      position INTEGER DEFAULT 0,
+      amount NUMERIC(15,2),
       created_at TIMESTAMPTZ DEFAULT NOW(),
       updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    -- Migrate: thêm cột mới nếu bảng todos đã tồn tại trước đó
+    ALTER TABLE todos ADD COLUMN IF NOT EXISTS position INTEGER DEFAULT 0;
+    ALTER TABLE todos ADD COLUMN IF NOT EXISTS amount NUMERIC(15,2);
+
+    CREATE TABLE IF NOT EXISTS todo_attachments (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      todo_id UUID NOT NULL REFERENCES todos(id) ON DELETE CASCADE,
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      original_name VARCHAR(255) NOT NULL,
+      stored_name VARCHAR(255) NOT NULL,
+      mime_type VARCHAR(100),
+      size_bytes INTEGER,
+      created_at TIMESTAMPTZ DEFAULT NOW()
     );
   `);
 }

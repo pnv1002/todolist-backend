@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import path from 'path';
 import swaggerUi from 'swagger-ui-express';
 import authRoutes from './routes/authRoutes';
 import todoRoutes from './routes/todoRoutes';
@@ -19,6 +20,8 @@ if (env.isDev) {
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
   app.get('/api-docs.json', (_req, res) => res.json(swaggerSpec));
 }
+
+app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/todos', todoRoutes);
