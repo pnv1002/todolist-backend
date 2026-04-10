@@ -53,5 +53,20 @@ export async function initDB() {
       size_bytes INTEGER,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS tags (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name VARCHAR(50) NOT NULL,
+      color VARCHAR(7) DEFAULT '#6366f1',
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE (user_id, name)
+    );
+
+    CREATE TABLE IF NOT EXISTS todo_tags (
+      todo_id UUID NOT NULL REFERENCES todos(id) ON DELETE CASCADE,
+      tag_id  UUID NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+      PRIMARY KEY (todo_id, tag_id)
+    );
   `);
 }

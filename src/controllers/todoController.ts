@@ -20,8 +20,15 @@ const moveSchema = z.object({
 
 export async function getAll(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-    const todos = await todoService.getTodos(req.userId!);
-    res.json(todos);
+    const { search, status, priority, page, limit } = req.query;
+    const result = await todoService.getTodos(req.userId!, {
+      search: search as string,
+      status: status as string,
+      priority: priority as string,
+      page: page ? parseInt(page as string, 10) : 1,
+      limit: limit ? parseInt(limit as string, 10) : 20,
+    });
+    res.json(result);
   } catch (err) { next(err); }
 }
 

@@ -10,12 +10,69 @@ export interface TodoInput {
   amount?: number | null;
 }
 
-export async function getTodos(userId: string) {
-  const result = await pool.query(
-    'SELECT * FROM todos WHERE user_id = $1 ORDER BY status, position ASC',
-    [userId]
+export interface TodoFilter {
+  search?: string;
+  status?: string;
+  priority?: string;
+  page?: number;
+  limit?: number;
+}
+
+export async function getTodos(userId: string, filter: TodoFilter = {}) {
+  const { search, status, priority, page = 1, limit = 20 } = filter;
+  const offset = (page - 1) * limit;
+
+  const conditions: string[] = ['t.user_id = $1'];
+  const params: unknown[] = [userId];
+  let idx = 2;
+
+  if (search) {
+    conditions.push(`(t.title ILIKE $${idx} OR t.description ILIKE $${idx})`);
+    params.push(`%${search}%`);
+    idx++;
+  }
+  if (status) {
+    conditions.push(`t.status = $${idx}`);
+    params.push(status);
+    idx++;
+  }
+  if (priority) {
+    conditions.push(`t.priority = $${idx}`);
+    params.push(priority);
+    idx++;
+  }
+
+  const where = conditions.join(' AND ');
+
+  const countResult = await pool.query(
+    `SELECT COUNT(*) FROM todos t WHERE ${where}`,
+    params
   );
-  return result.rows;
+  const total = parseInt(countResult.rows[0].count, 10);
+
+  const dataResult = await pool.query(
+    `SELECT t.*,
+       COALESCE(
+         json_agg(json_build_object('id', tg.id, 'name', tg.name, 'color', tg.color))
+         FILTER (WHERE tg.id IS NOT NULL), '[]'
+       ) AS tags
+     FROM todos t
+     LEFT JOIN todo_tags tt ON tt.todo_id = t.id
+     LEFT JOIN tags tg ON tg.id = tt.tag_id
+     WHERE ${where}
+     GROUP BY t.id
+     ORDER BY t.status, t.position ASC
+     LIMIT $${idx} OFFSET $${idx + 1}`,
+    [...params, limit, offset]
+  );
+
+  return {
+    data: dataResult.rows,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  };
 }
 
 export async function getTodoById(id: string, userId: string) {
