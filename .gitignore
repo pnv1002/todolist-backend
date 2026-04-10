@@ -1,0 +1,7 @@
+node_modules/
+dist/
+
+# Env files — chỉ commit .env.example
+.env
+.env.development
+.env.production
