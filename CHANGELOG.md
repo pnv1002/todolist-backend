@@ -1,5 +1,38 @@
 # Changelog
 
+## [v0.0.2] — 2026-04-10
+
+### Tính năng mới
+
+#### Rate Limiting
+- Giới hạn 100 request / 15 phút cho toàn bộ API (`globalLimiter`)
+- Giới hạn 10 request / 15 phút riêng cho `/api/auth/*` chống brute-force (`authLimiter`)
+- Trả về header chuẩn `RateLimit-*`
+
+#### Phân trang (Pagination)
+- `GET /api/todos?page=1&limit=20` — phân trang danh sách todos
+- Response trả về `{ data, total, page, limit, totalPages }`
+
+#### Tìm kiếm & Lọc (Search & Filter)
+- `?search=keyword` — tìm theo tiêu đề và mô tả (ILIKE, không phân biệt hoa thường)
+- `?status=pending|in_progress|done` — lọc theo trạng thái
+- `?priority=low|medium|high` — lọc theo mức độ ưu tiên
+- Kết hợp được nhiều tham số cùng lúc
+
+#### Quản lý nhãn (Tags / Labels)
+- Bảng `tags` (id, user_id, name, color) và `todo_tags` (nhiều-nhiều)
+- `GET /api/tags` — danh sách nhãn của user
+- `POST /api/tags` — tạo nhãn `{ name, color }`
+- `DELETE /api/tags/:id` — xóa nhãn
+- `POST /api/tags/todo/:id/:tagId` — gắn nhãn vào todo
+- `DELETE /api/tags/todo/:id/:tagId` — gỡ nhãn khỏi todo
+- Danh sách `tags` được trả kèm trong mỗi todo
+
+### Thay đổi Breaking
+- `GET /api/todos` thay đổi cấu trúc response — trả về object pagination thay vì array thuần
+
+---
+
 ## [v0.1.0] — 2026-04-10
 
 ### Tính năng mới
